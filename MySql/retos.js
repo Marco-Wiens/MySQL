@@ -195,13 +195,14 @@ async function notasMediaAlumnos(conn){
 
 async function reto3(conn){
     try{
+        let params = [];
         let sql = "SELECT DISTINCT t.first_name as nombre, t.last_name as apellido, group_concat(DISTINCT sub.title) as Asignatura"+
                 " FROM dia1.teachers as t" +
                 " INNER JOIN subject_teacher as st ON t.id_teachers = st.id_teacher"+
                 " INNER JOIN subjects as sub ON st.id_subject = sub.id_subjects"+
                 " GROUP BY nombre, apellido;"
 
-        let [result] = await conn.query(sql);
+        let [result] = await conn.query(sql, params);
 
         console.log(result);
     }catch(err){
@@ -214,13 +215,14 @@ async function reto3(conn){
 
 async function reto4(conn){
     try{
+        let params = [];
         let sql = "SELECT DISTINCT s.first_name as nombre, s.last_name as apellido, group_concat(DISTINCT sub.title) as Asignatura"+
         " FROM dia1.students as s"+
         " INNER JOIN marks as m ON s.id_students = m.id_student"+
         " INNER JOIN subjects as sub ON m.id_subject = sub.id_subjects"+
         " GROUP BY nombre, apellido;"
 
-        let [result] = await conn.query(sql);
+        let [result] = await conn.query(sql, params);
 
         console.log(result);
     }catch(err){
@@ -233,6 +235,7 @@ async function reto4(conn){
 
 async function reto5(conn){
     try{
+        let params = [];
         let sql = "SELECT DISTINCT COUNT(s.id_students) as Alumnos, CONCAT(t.first_name, ' ', t.last_name) as Profesor , sub.title as Asignatura"+
         " FROM dia1.students as s"+
         " INNER JOIN marks as m ON s.id_students = m.id_student"+
@@ -241,7 +244,7 @@ async function reto5(conn){
         " INNER JOIN teachers as t ON t.id_teachers = st.id_teacher"+
         " GROUP BY sub.title, Profesor;"
 
-        let [result] = await conn.query(sql);
+        let [result] = await conn.query(sql, params);
 
         console.log(result);
     }catch(err){
