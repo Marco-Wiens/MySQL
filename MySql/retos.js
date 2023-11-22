@@ -15,15 +15,21 @@ async function main(){
         console.log("Conexión correcta");
 
 
-        modDireccionAnnadir(conn);
-        modDireccionEliminar(conn);
+        mediaAsignatura(conn);
+        totalAlumnos(conn);
         // eliminarDireccion(conn);
-        setearNotas(conn);
-        mostrarEstudiantes(conn);
-        mostrarProfesores(conn);
-        eliminarNotas(conn);
-        modNotas(conn);
+        todoGroups(conn);
+        eliminaNotascondicion(conn);
+        alumnosAnno(conn);
+        profesoresAsignatura(conn);
+        notasBetween(conn);
+        notasMedia(conn);
+        notasMediaAlumnos(conn);
+        reto3(conn);
+        reto4(conn);
+        reto5(conn);
 
+        await conn.end();
         
     }catch(err){
         console.log(err);
@@ -36,13 +42,14 @@ async function main(){
 
 
 
-async function modDireccionAnnadir(conn){
+async function mediaAsignatura(conn){
     try{
-        let sql = "ALTER TABLE direccion ADD (numero INT2);"
+        let params = ["1"];
+        let sql = "SELECT AVG(mark) from marks WHERE (id_subject = ?);"
 
-        let [result] = await conn.query(sql);
+        let [result] = await conn.query(sql, params);
 
-        console.log("Tabla Modificada: Columna insertada");
+        console.log("Media de la Asignatura 1");
         console.log(result);
     }catch(err){
         console.log(err.sqlMessage);
@@ -52,13 +59,13 @@ async function modDireccionAnnadir(conn){
 
 }
 
-async function modDireccionEliminar(conn){
+async function totalAlumnos(conn){
     try{
-        let sql = "ALTER TABLE direccion DROP codigo_postal;"
+        let sql = "SELECT COUNT(*) FROM students;"
 
         let [result] = await conn.query(sql);
 
-        console.log("Tabla Modificada: Columna eliminada");
+        console.log("Número total de alumnos");
         console.log(result);
     }catch(err){
         console.log(err.sqlMessage);
@@ -69,13 +76,13 @@ async function modDireccionEliminar(conn){
 }
 
 
-async function eliminarDireccion(conn){
+async function todoGroups(conn){
     try{
-        let sql = "DROP TABLE direccion;"
+        let sql = "SELECT * FROM dia1.groups;"
 
         let [result] = await conn.query(sql);
 
-        console.log("Tabla eliminada");
+        console.log("Todos los datos de la tabla groups");
         console.log(result);
     }catch(err){
         console.log(err.sqlMessage);
@@ -85,13 +92,15 @@ async function eliminarDireccion(conn){
 
 }
 
-async function setearNotas(conn){
+async function eliminaNotascondicion(conn){
     try{
-        let sql = "UPDATE marks SET mark = 0 WHERE id_marks > 0;"
+        let params = ["0","5","1"];
 
-        let [result] = await conn.query(sql);
+        let sql = "DELETE FROM marks WHERE (id_marks > ?) AND (mark > ?) AND ((YEAR(NOW()) - YEAR(date)) = ?);"
 
-        console.log("Tabla Modificada: Notas a 0");
+        let [result] = await conn.query(sql, params);
+
+        console.log("Notas eliminadas");
         console.log(result);
     }catch(err){
         console.log(err.sqlMessage);
@@ -101,24 +110,9 @@ async function setearNotas(conn){
 
 }
 
-async function mostrarEstudiantes(conn){
+async function alumnosAnno(conn){
     try{
-        let sql = "SELECT first_name, last_name FROM students;"
-
-        let [result] = await conn.query(sql);
-
-        console.log(result);
-    }catch(err){
-        console.log(err.sqlMessage);
-        await conn.end()
-    }
-
-
-}
-
-async function mostrarProfesores(conn){
-    try{
-        let sql = "SELECT * FROM teachers;"
+        let sql = "SELECT * FROM students WHERE anno_ingreso = YEAR(NOW());"
 
         let [result] = await conn.query(sql);
 
@@ -131,11 +125,9 @@ async function mostrarProfesores(conn){
 
 }
 
-
-async function eliminarNotas(conn){
-    let fecha = new Date().getFullYear();
+async function profesoresAsignatura(conn){
     try{
-        let sql = "DELETE FROM marks WHERE ("+ fecha +" - YEAR(date)) >= 10";
+        let sql = "SELECT id_subject, COUNT(*) as profesores from subject_teacher GROUP BY id_subject;"
 
         let [result] = await conn.query(sql);
 
@@ -144,11 +136,70 @@ async function eliminarNotas(conn){
         console.log(err.sqlMessage);
         await conn.end()
     }
+
+
 }
 
-async function modNotas(conn){
+async function notasBetween(conn){
     try{
-        let sql = "UPDATE marks SET mark = 5 WHERE mark < 5";
+        let params = ["1","20", "8","1"]
+        let sql = "SELECT id_student, mark FROM marks WHERE (id_student BETWEEN ? AND ?) OR "
+                +"(mark > ? AND (YEAR(NOW()) - YEAR(date)) = ?);"
+
+        let [result] = await conn.query(sql, params);
+
+        console.log(result);
+    }catch(err){
+        console.log(err.sqlMessage);
+        await conn.end()
+    }
+
+
+}
+
+async function notasMedia(conn){
+    try{
+        let params = ["1"]
+        let sql = "SELECT id_subject, AVG(mark) FROM marks"+
+                " WHERE (YEAR(NOW()) - YEAR(date)) = ?"+
+                " GROUP BY id_subject;"
+
+        let [result] = await conn.query(sql, params);
+
+        console.log(result);
+    }catch(err){
+        console.log(err.sqlMessage);
+        await conn.end()
+    }
+
+
+}
+
+async function notasMediaAlumnos(conn){
+    try{
+        let params = ["1"]
+        let sql = "SELECT id_student, AVG(mark) FROM marks"+
+                " WHERE (YEAR(NOW()) - YEAR(date)) = ?"+
+                " GROUP BY id_student;"
+
+        let [result] = await conn.query(sql, params);
+
+        console.log(result);
+    }catch(err){
+        console.log(err.sqlMessage);
+        await conn.end()
+    }
+
+
+}
+
+async function reto3(conn){
+    try{
+        let sql = "SELECT DISTINCT t.first_name as nombre, t.last_name as apellido, group_concat(DISTINCT sub.title) as Asignatura"+
+                " FROM dia1.teachers as t" +
+                " INNER JOIN subject_teacher as st ON t.id_teachers = st.id_teacher"+
+                " INNER JOIN subjects as sub ON st.id_subject = sub.id_subjects"+
+                " GROUP BY nombre, apellido;"
 
         let [result] = await conn.query(sql);
 
@@ -157,7 +208,51 @@ async function modNotas(conn){
         console.log(err.sqlMessage);
         await conn.end()
     }
+
+
 }
+
+async function reto4(conn){
+    try{
+        let sql = "SELECT DISTINCT s.first_name as nombre, s.last_name as apellido, group_concat(DISTINCT sub.title) as Asignatura"+
+        " FROM dia1.students as s"+
+        " INNER JOIN marks as m ON s.id_students = m.id_student"+
+        " INNER JOIN subjects as sub ON m.id_subject = sub.id_subjects"+
+        " GROUP BY nombre, apellido;"
+
+        let [result] = await conn.query(sql);
+
+        console.log(result);
+    }catch(err){
+        console.log(err.sqlMessage);
+        await conn.end()
+    }
+
+
+}
+
+async function reto5(conn){
+    try{
+        let sql = "SELECT DISTINCT COUNT(s.id_students) as Alumnos, CONCAT(t.first_name, ' ', t.last_name) as Profesor , sub.title as Asignatura"+
+        " FROM dia1.students as s"+
+        " INNER JOIN marks as m ON s.id_students = m.id_student"+
+        " INNER JOIN subjects as sub ON m.id_subject = sub.id_subjects"+
+        " INNER JOIN subject_teacher as st ON st.id_subject = sub.id_subjects"+
+        " INNER JOIN teachers as t ON t.id_teachers = st.id_teacher"+
+        " GROUP BY sub.title, Profesor;"
+
+        let [result] = await conn.query(sql);
+
+        console.log(result);
+    }catch(err){
+        console.log(err.sqlMessage);
+        await conn.end()
+    }
+
+
+}
+
+
 
 
 main();
