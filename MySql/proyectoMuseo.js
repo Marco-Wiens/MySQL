@@ -57,7 +57,7 @@ async function piezasTotales(conn){
         let params = [];
         let sql = "SELECT COUNT(p.id_piezas) as NºPiezas, c.tipo"+
                 " FROM piezas as p"+
-                " INNER JOIN coleccion as c ON (c.id_pieza = p.id_piezas)"+
+                " INNER JOIN coleccion as c ON (c.id_coleccion = p.id_coleccion)"+
                 " GROUP BY c.tipo"+
                 " ORDER BY NºPiezas DESC;"
 
